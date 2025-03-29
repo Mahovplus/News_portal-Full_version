@@ -1,0 +1,21 @@
+from uuid import uuid4
+
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy.orm import relationship
+from datetime import datetime, timezone
+
+from sqlalchemy_utils import UUIDType
+from db.base_class import Base
+
+utc_now = datetime.now(timezone.utc)
+
+class Post(Base):
+
+    uid = Column(UUIDType, default=uuid4, primary_key=True)
+    created_date = Column(DateTime, default=utc_now)
+    is_active = Column(Boolean, default=True)
+    title = Column(String)
+    image = Column(String)
+    content = Column(String)
+    owner_uid = Column(UUIDType, ForeignKey("user.uid"))
+    owner = relationship("User", back_populates="posts")
