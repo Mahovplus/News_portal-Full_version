@@ -1,16 +1,25 @@
 import os
 
 from fastapi import APIRouter, Depends, UploadFile
-from sqlalchemy.exc import StatementError
-from sqlalchemy.orm import Session
 from fastapi.requests import Request
 from fastapi.responses import RedirectResponse
-from app.postconf.models import Post
+
+import json
+from fastapi import APIRouter, Depends, UploadFile, HTTPException
+from ..userconf.utils import get_user_by_token
+
+from sqlalchemy.exc import StatementError
+from sqlalchemy.orm import Session
+
 from app.postconf.forms import AddPostForm, UpdatePostForm
 from core.config import TemplateResponse, MEDIA_URL
 from core.decorators import login_required
 from core.requests_framework import setup_user_dict
 from db.session import get_db
+
+from app.postconf.models import Comments
+from app.userconf.models import User
+from app.postconf.models import Post
 
 post_route = APIRouter(prefix='/blog')
 
@@ -49,14 +58,23 @@ async def create_post(request: Request, db: Session = Depends(get_db)):
 @post_route.get('/single/{uuid}')
 async def show_post(uuid: str, request: Request, db: Session = Depends(get_db)):
     response_dict = await setup_user_dict(request, db)
+
+    comments = db.query(Comments).filter(Comments.post_uid == uuid).all()
+    users = [db.query(User).filter(User.uid == comment.owner_uid).first().username for comment in comments]
+
+    response_dict['comments'] = [{'username': username, 'content': comment.content} for username, comment in
+                                 zip(users, comments)]
+
     try:
-        post = db.query(Post).filter(Post.uid == uuid).first()
+        post: Post = db.query(Post).filter(Post.uid == uuid).first()
     except StatementError:
         post = None
 
     response_dict['post'] = post
+    response = TemplateResponse('blog/single-post.jinja2', response_dict)
 
-    return TemplateResponse('blog/single-post.jinja2', response_dict)
+    response.set_cookie('post_uid', post.uid)
+    return response
 
 
 @post_route.get('/edit/{uuid}')
@@ -101,3 +119,23 @@ async def remove_post(uuid: str, request: Request, db: Session = Depends(get_db)
         return RedirectResponse('/blog/')
 
     return RedirectResponse(request.headers.get('referer'))
+
+
+@post_route.post('/add_comment')
+async def add_comment(request: Request, db: Session = Depends(get_db)):
+    data = json.loads(await request.body())
+    text = data.get('text')
+    token = data.get('token')
+    post_uid = data.get('postUid')
+
+    if token:
+        user = await get_user_by_token(token, db)
+        if not user:
+            raise HTTPException(status_code=403)
+
+        comment = Comments(content=text, owner_uid=user.uid, post_uid=post_uid)
+        db.add(comment)
+        db.commit()
+        return {'username': user.username, 'text': text}
+
+    raise HTTPException(status_code=404)

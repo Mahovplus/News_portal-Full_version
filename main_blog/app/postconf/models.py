@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
@@ -19,3 +19,11 @@ class Post(Base):
     content = Column(String)
     owner_uid = Column(UUIDType, ForeignKey("user.uid"))
     owner = relationship("User", back_populates="posts")
+
+
+class Comments(Base):
+    uid = Column(UUIDType, default=uuid4, primary_key=True)
+    created_date = Column(DateTime, default=utc_now)
+    content = Column(Text)
+    post_uid = Column(UUIDType, ForeignKey('post.uid'))
+    owner_uid = Column(UUIDType, ForeignKey("user.uid"))
