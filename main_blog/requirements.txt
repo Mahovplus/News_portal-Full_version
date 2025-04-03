@@ -20,6 +20,7 @@ fakeredis==2.27.0
 fastapi==0.78.0
 fastapi-mail==1.0.9
 greenlet==1.1.2
+gunicorn==20.1.0
 h11==0.13.0
 httpcore==1.0.7
 httptools==0.4.0
@@ -47,7 +48,7 @@ SQLAlchemy==1.4.37
 SQLAlchemy-Utils==0.38.2
 starlette==0.19.1
 typing_extensions==4.12.2
-uvicorn==0.17.6
+uvicorn[standard]==0.18.2
 watchgod==0.8.2
 websockets==10.3
 wheel==0.41.2
