@@ -3,7 +3,7 @@ from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from main_blog.core import config
+from core import config
 
 engine = create_engine(config.SQLALCHEMY_DATABASE_URL,
                        connect_args={"check_same_thread": False}, pool_pre_ping=True)
