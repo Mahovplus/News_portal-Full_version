@@ -16,7 +16,7 @@ ROOT_URL = Path(__file__).resolve().parent.parent
 MEDIA_URL = os.path.join(ROOT_URL, 'media')
 
 #templates_dir = os.path.normpath('C:\\Python_Projects\\News_portal\\main_blog\\templates')
-templates = Jinja2Templates(directory='main_blog/templates')
+templates = Jinja2Templates(directory='templates')
 TemplateResponse = templates.TemplateResponse
 
 mail_conf = ConnectionConfig(
